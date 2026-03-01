@@ -4,9 +4,9 @@ from streamlit_folium import st_folium
 from folium.plugins import HeatMap
 import pandas as pd
 
-# -----------------------------
-# PAGE CONFIG + UI THEME
-# -----------------------------
+# -------------------------------------------------
+# PAGE CONFIG + THEME
+# -------------------------------------------------
 st.set_page_config(
     page_title="AMD-BISMAP | Geo-AI Digital Twin",
     layout="wide"
@@ -17,24 +17,18 @@ st.markdown("""
 body {background-color:#0e1117;}
 .block-container {padding-top:2rem;}
 h1, h2, h3 {color:#f8fafc;}
-.metric-box {
-    background:#111827;
-    padding:16px;
-    border-radius:12px;
-    border:1px solid #1f2937;
-}
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------
+# -------------------------------------------------
 # TITLE
-# -----------------------------
+# -------------------------------------------------
 st.title("🧠 AMD-BISMAP")
 st.caption("Geo-AI Digital Twin Platform — simulate businesses before they exist")
 
-# -----------------------------
-# SIMULATED AREA + ECOSYSTEM DATA
-# -----------------------------
+# -------------------------------------------------
+# SIMULATED LOCATION DATA
+# -------------------------------------------------
 areas = [
     {
         "name": "Zone A",
@@ -65,17 +59,40 @@ areas = [
         "supply": 3,
         "competition": 2,
         "shops": ["Restaurant", "Supermarket", "Pharmacy"]
-    },
+    }
 ]
 
-# -----------------------------
+# -------------------------------------------------
+# LOCATION SEARCH BAR
+# -------------------------------------------------
+st.subheader("🔍 Search Location")
+
+search_query = st.text_input(
+    "Type location name (e.g. Zone A, Zone B)"
+).strip().lower()
+
+filtered_areas = [
+    a for a in areas if search_query in a["name"].lower()
+] if search_query else areas
+
+if not filtered_areas:
+    st.warning("No matching location found.")
+    st.stop()
+
+# -------------------------------------------------
 # MAP + HEATMAP + SHOP ICONS
-# -----------------------------
+# -------------------------------------------------
 st.subheader("🗺️ Demand–Supply Opportunity Map")
 
-m = folium.Map(location=[9.93, 78.12], zoom_start=12)
+center_lat = filtered_areas[0]["lat"]
+center_lon = filtered_areas[0]["lon"]
 
-heat_data = [[a["lat"], a["lon"], a["demand"] - a["supply"]] for a in areas]
+m = folium.Map(location=[center_lat, center_lon], zoom_start=13)
+
+heat_data = [
+    [a["lat"], a["lon"], a["demand"] - a["supply"]]
+    for a in filtered_areas
+]
 
 HeatMap(
     heat_data,
@@ -95,7 +112,7 @@ icon_map = {
     "Repair Shop": "wrench"
 }
 
-for area in areas:
+for area in filtered_areas:
     for shop in area["shops"]:
         folium.Marker(
             location=[area["lat"], area["lon"]],
@@ -109,20 +126,24 @@ for area in areas:
 
 st_folium(m, width=1000, height=450)
 
-st.info("🟢 Green zones indicate high-demand / low-supply opportunity hotspots")
+st.info("🟢 Hotter zones indicate higher demand–lower supply")
 
-# -----------------------------
+# -------------------------------------------------
 # DIGITAL TWIN SIMULATION
-# -----------------------------
+# -------------------------------------------------
 st.divider()
 st.subheader("🏪 Digital Twin Business Simulation")
 
-selected = st.selectbox("Select Area", [a["name"] for a in areas])
-area = next(a for a in areas if a["name"] == selected)
+selected_area = st.selectbox(
+    "Select Area for Simulation",
+    [a["name"] for a in filtered_areas]
+)
 
-# -----------------------------
+area = next(a for a in areas if a["name"] == selected_area)
+
+# -------------------------------------------------
 # SCENARIO CONTROLS
-# -----------------------------
+# -------------------------------------------------
 st.subheader("🎛️ Scenario Controls")
 
 growth = st.slider("Demand Growth (%)", -20, 50, 10)
@@ -145,46 +166,22 @@ c1.metric("📦 Daily Orders", daily_orders)
 c2.metric("💰 Monthly Revenue (₹)", f"{monthly_revenue:,}")
 c3.metric("⚠️ Risk Score", round(risk_score, 2))
 
-if risk_score < 0.5:
-    st.success("✅ Low Risk — High Opportunity Zone")
-else:
-    st.warning("⚠️ Moderate Risk — Needs Differentiation")
-
-# -----------------------------
+# -------------------------------------------------
 # REVENUE FORECAST
-# -----------------------------
+# -------------------------------------------------
 st.subheader("📈 6-Month Revenue Projection")
 
 months = ["M1","M2","M3","M4","M5","M6"]
-projection = [monthly_revenue * (1 + i*0.08) for i in range(6)]
+projection = [monthly_revenue * (1 + i * 0.08) for i in range(6)]
 
 df = pd.DataFrame({"Month": months, "Revenue": projection})
 st.line_chart(df.set_index("Month"))
 
-# -----------------------------
-# BUSINESS ECOSYSTEM
-# -----------------------------
-st.subheader("🧩 Business Ecosystem Intelligence")
-
-for shop in area["shops"]:
-    st.write("🔗 Existing business:", shop)
-
-# -----------------------------
-# AI BUSINESS ADVISOR CHATBOT
-# -----------------------------
-st.divider()
-st.subheader("🤖 AI Business Advisor")
-
-question = st.text_input(
-    "Ask something like: What business should I start here?"
-)
-
-
-    # -----------------------------
+# -------------------------------------------------
 # PRO AI BUSINESS ADVISOR
-# -----------------------------
+# -------------------------------------------------
 st.divider()
-st.subheader("🤖 AI Business Advisor — Pro Insights")
+st.subheader("🤖 AI Business Advisor — Pro")
 
 question = st.text_input(
     "Ask: What business should I start here?"
@@ -193,7 +190,6 @@ question = st.text_input(
 def pro_advisor(area, revenue):
     insights = []
 
-    # --- Competition Level ---
     if area["competition"] <= 3:
         competition_level = "Low"
     elif area["competition"] <= 6:
@@ -201,7 +197,6 @@ def pro_advisor(area, revenue):
     else:
         competition_level = "High"
 
-    # --- Budget Estimation ---
     if area["demand"] > 7 and area["competition"] < 4:
         business = "Cloud Kitchen / QSR"
         budget = "₹4 – ₹7 Lakhs"
@@ -212,40 +207,24 @@ def pro_advisor(area, revenue):
         business = "Retail / Service Business"
         budget = "₹1 – ₹3 Lakhs"
 
-    # --- Confidence Score ---
     confidence = (
         (area["demand"] * 10)
         - (area["competition"] * 8)
         + (area["population"] / 2000)
     )
-    confidence = max(30, min(int(confidence), 95))
+    confidence = max(35, min(int(confidence), 95))
 
-    # --- Insights ---
-    insights.append(f"🏪 **Recommended Business:** {business}")
-    insights.append(f"💸 **Estimated Budget Range:** {budget}")
-    insights.append(f"⚔️ **Competition Level:** {competition_level}")
-    insights.append(f"📈 **Expected Monthly Revenue:** ₹{int(revenue):,}")
-    insights.append(f"✅ **Business Confidence Score:** {confidence}%")
-
-    return insights
-
-if question:
-    st.markdown("### 📊 Pro Advisor Output")
-    results = pro_advisor(area, monthly_revenue)
-
-    for r in results:
-        st.markdown(r)
-
-    if "Cloud Kitchen" in results[0]:
-        st.success("🔥 High-growth opportunity with strong demand support")
-    else:
-        st.info("ℹ️ Moderate growth opportunity with stable returns")
+    insights.append(f"🏪 Recommended Business: {business}")
+    insights.append(f"💸 Estimated Budget: {budget}")
+    insights.append(f"⚔️ Competition Level: {competition_level}")
+    insights.append(f"📈 Expected Monthly Revenue: ₹{int(revenue):,}")
+    insights.append(f"✅ Business Confidence Score: {confidence}%")
 
     return insights
 
 if question:
-    st.markdown("### 🧠 Advisor Insights")
-    for i in advisor(area):
-        st.write("•", i)
+    st.markdown("### 📊 Advisor Output")
+    for line in pro_advisor(area, monthly_revenue):
+        st.write("•", line)
 
-st.caption("This advisor uses location intelligence, demand-supply signals, and ecosystem context.")
+st.caption("Pro advisor converts geo-intelligence into capital, risk, and return metrics.")
