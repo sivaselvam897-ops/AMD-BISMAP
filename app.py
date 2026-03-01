@@ -180,25 +180,66 @@ question = st.text_input(
 )
 
 def advisor(area):
+    # -----------------------------
+# PRO AI BUSINESS ADVISOR
+# -----------------------------
+st.divider()
+st.subheader("🤖 AI Business Advisor — Pro Insights")
+
+question = st.text_input(
+    "Ask: What business should I start here?"
+)
+
+def pro_advisor(area, revenue):
     insights = []
 
-    if area["population"] > 10000:
-        insights.append("High crowd density detected.")
+    # --- Competition Level ---
+    if area["competition"] <= 3:
+        competition_level = "Low"
+    elif area["competition"] <= 6:
+        competition_level = "Medium"
+    else:
+        competition_level = "High"
 
-    if area["demand"] > area["supply"]:
-        insights.append("Demand exceeds supply — strong opportunity.")
-
-    if area["competition"] < 4:
-        insights.append("Low competition environment.")
-
-    if "Restaurant" in area["shops"] or "Bakery" in area["shops"]:
-        insights.append("Food-based businesses are favorable here.")
-
-    if "Supermarket" in area["shops"]:
-        insights.append("Delivery & logistics services have high potential.")
-
+    # --- Budget Estimation ---
     if area["demand"] > 7 and area["competition"] < 4:
-        insights.append("Recommended business: Cloud Kitchen / Quick Service Restaurant.")
+        business = "Cloud Kitchen / QSR"
+        budget = "₹4 – ₹7 Lakhs"
+    elif "Supermarket" in area["shops"]:
+        business = "Delivery & Logistics Service"
+        budget = "₹2 – ₹4 Lakhs"
+    else:
+        business = "Retail / Service Business"
+        budget = "₹1 – ₹3 Lakhs"
+
+    # --- Confidence Score ---
+    confidence = (
+        (area["demand"] * 10)
+        - (area["competition"] * 8)
+        + (area["population"] / 2000)
+    )
+    confidence = max(30, min(int(confidence), 95))
+
+    # --- Insights ---
+    insights.append(f"🏪 **Recommended Business:** {business}")
+    insights.append(f"💸 **Estimated Budget Range:** {budget}")
+    insights.append(f"⚔️ **Competition Level:** {competition_level}")
+    insights.append(f"📈 **Expected Monthly Revenue:** ₹{int(revenue):,}")
+    insights.append(f"✅ **Business Confidence Score:** {confidence}%")
+
+    return insights
+
+if question:
+    st.markdown("### 📊 Pro Advisor Output")
+    results = pro_advisor(area, monthly_revenue)
+
+    for r in results:
+        st.markdown(r)
+
+    if "Cloud Kitchen" in results[0]:
+        st.success("🔥 High-growth opportunity with strong demand support")
+    else:
+        st.info("ℹ️ Moderate growth opportunity with stable returns")
 
     return insights
 
