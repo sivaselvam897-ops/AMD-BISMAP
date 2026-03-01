@@ -29,7 +29,7 @@ h1, h2, h3 {color:#f8fafc;}
 """, unsafe_allow_html=True)
 
 # =================================================
-# SIMPLE LOGIN SYSTEM (SESSION BASED)
+# SIMPLE LOGIN SYSTEM
 # =================================================
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -45,7 +45,7 @@ def login_page():
         if username and password:
             st.session_state.logged_in = True
             st.session_state.user = username
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Please enter username and password")
 
@@ -56,7 +56,7 @@ if not st.session_state.logged_in:
     st.stop()
 
 # =================================================
-# APP HEADER
+# HEADER
 # =================================================
 st.title("🧠 AMD-BISMAP")
 st.caption(
@@ -195,6 +195,7 @@ c3.metric("⚠️ Risk Score", round(risk_score, 2))
 # REVENUE FORECAST
 # =================================================
 st.subheader("📈 6-Month Revenue Projection")
+
 months = ["M1","M2","M3","M4","M5","M6"]
 projection = [monthly_revenue * (1 + i*0.08) for i in range(6)]
 df = pd.DataFrame({"Month": months, "Revenue": projection})
@@ -222,20 +223,20 @@ def pro_advisor(area, revenue):
         business = "Cloud Kitchen / Quick Service Restaurant"
         budget = "₹4–₹7 Lakhs"
         strategy = (
-            "Start with a small cloud kitchen focusing on 2–3 fast-moving food items. "
-            "Partner with nearby supermarkets and restaurants for raw materials and delivery reach. "
-            "Run online-only operations initially to reduce rent costs. "
-            "With high demand and low competition, this approach can generate stable daily orders "
-            "and scale into a full-service outlet within 6–9 months."
+            "Start with a compact cloud kitchen focusing on 2–3 high-demand food items. "
+            "Operate delivery-only to reduce rental costs. Partner with nearby supermarkets "
+            "and restaurants for raw materials and quick fulfillment. Run local promotions "
+            "during peak hours. With high demand and low competition, this model can achieve "
+            "stable daily orders and scale within 6–9 months."
         )
     else:
         business = "Local Retail / Service Business"
         budget = "₹1–₹3 Lakhs"
         strategy = (
-            "Begin with a focused retail or service setup targeting daily-need customers. "
-            "Differentiate through pricing, convenience, or extended service hours. "
-            "Leverage nearby supporting shops for cross-promotion. "
-            "This approach ensures steady cash flow with controlled risk in competitive zones."
+            "Begin with a focused retail or service setup addressing daily needs. "
+            "Differentiate through convenience, pricing, or extended service hours. "
+            "Use nearby supporting shops for cross-promotion. This approach ensures "
+            "steady cash flow with manageable risk in competitive zones."
         )
 
     confidence = max(
@@ -258,7 +259,7 @@ if question:
     st.write(f"📈 **Expected Monthly Revenue:** ₹{int(monthly_revenue):,}")
     st.write(f"✅ **Business Confidence Score:** {confidence}%")
 
-    st.markdown("### 🧭 How to Start & What to Expect")
+    st.markdown("### 🧭 How to Start & Expected Outcome")
     st.write(strategy)
 
 st.caption("This Pro advisor converts location intelligence into actionable business strategy.")
