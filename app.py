@@ -179,7 +179,7 @@ question = st.text_input(
     "Ask something like: What business should I start here?"
 )
 
-def advisor(area):
+
     # -----------------------------
 # PRO AI BUSINESS ADVISOR
 # -----------------------------
